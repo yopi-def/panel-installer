@@ -90,31 +90,13 @@ install_composer() {
 
 ptdl_dl() {
   output "Downloading pterodactyl panel files .. "
-
-  # Buat folder target
   mkdir -p /var/www/pterodactyl
   cd /var/www/pterodactyl || exit
 
-  # Download tar.gz dari GitHub
   curl -Lo panel.tar.gz "$PANEL_DL_URL"
-
-  # Ekstrak tar.gz (hasilnya panel-1.11.11/)
   tar -xzvf panel.tar.gz
-  rm panel.tar.gz
+  chmod -R 755 storage/* bootstrap/cache/
 
-  # Pindahkan semua isi panel-1.11.11 ke folder saat ini
-  shopt -s dotglob nullglob   # supaya file hidden ikut
-  mv panel-1.11.11/* ./ 
-  mv panel-1.11.11/.* ./ 2>/dev/null   # untuk .gitignore, .env.example jika ada
-  rm -rf panel-1.11.11
-  shopt -u dotglob nullglob
-
-  # Buat folder storage & cache jika belum ada, set permission
-  mkdir -p storage bootstrap/cache
-  chmod -R 775 storage bootstrap/cache
-  chown -R www-data:www-data storage bootstrap/cache
-
-  # Copy .env
   cp .env.example .env
 
   success "Downloaded pterodactyl panel files!"
