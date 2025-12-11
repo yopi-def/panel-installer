@@ -97,9 +97,14 @@ ptdl_dl() {
   curl -Lo panel.zip "$PANEL_DL_URL"
   unzip panel.zip
   cd panel-main || exit
-  chmod -R 755 storage/* bootstrap/cache/
+
+  mkdir -p bootstrap/cache storage
+  chmod -R 775 storage bootstrap/cache
+  chown -R www-data:www-data storage bootstrap/cache
 
   cp .env.example .env
+
+  rm ../panel.zip
 
   success "Downloaded pterodactyl panel files!"
 }

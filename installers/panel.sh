@@ -94,17 +94,23 @@ ptdl_dl() {
   mkdir -p /var/www/pterodactyl
   cd /var/www/pterodactyl || exit
 
+  # Download ZIP
   curl -Lo panel.zip "$PANEL_DL_URL"
-  unzip panel.zip
-  cd panel-main || exit
 
-  mkdir -p bootstrap/cache storage
+  # Ekstrak ZIP langsung ke folder saat ini tanpa nested folder
+  unzip -q panel.zip -d temp_panel
+  shopt -s dotglob nullglob
+  mv temp_panel/* ./
+  rm -rf temp_panel panel.zip
+  shopt -u dotglob nullglob
+
+  # Pastikan folder storage & cache ada dan writable
+  mkdir -p storage bootstrap/cache
   chmod -R 775 storage bootstrap/cache
   chown -R www-data:www-data storage bootstrap/cache
 
+  # Copy environment file
   cp .env.example .env
-
-  rm ../panel.zip
 
   success "Downloaded pterodactyl panel files!"
 }
