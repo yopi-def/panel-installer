@@ -90,11 +90,13 @@ install_composer() {
 
 ptdl_dl() {
   output "Downloading pterodactyl panel files .. "
+  apt install unzip -y
   mkdir -p /var/www/pterodactyl
   cd /var/www/pterodactyl || exit
 
-  curl -Lo panel.tar.gz "$PANEL_DL_URL"
-  tar -xzvf panel.tar.gz
+  curl -Lo panel.zip "$PANEL_DL_URL"
+  unzip panel.zip
+  cd panel-main || exit
   chmod -R 755 storage/* bootstrap/cache/
 
   cp .env.example .env
