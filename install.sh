@@ -2,6 +2,32 @@
 
 set -e
 
+######################################################################################
+#                                                                                    #
+# Project 'pterodactyl-installer'                                                    #
+#                                                                                    #
+# Copyright (C) 2018 - 2025, Vilhelm Prytz, <vilhelm@prytznet.se>                    #
+#                                                                                    #
+#   This program is free software: you can redistribute it and/or modify             #
+#   it under the terms of the GNU General Public License as published by             #
+#   the Free Software Foundation, either version 3 of the License, or                #
+#   (at your option) any later version.                                              #
+#                                                                                    #
+#   This program is distributed in the hope that it will be useful,                  #
+#   but WITHOUT ANY WARRANTY; without even the implied warranty of                   #
+#   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the                    #
+#   GNU General Public License for more details.                                     #
+#                                                                                    #
+#   You should have received a copy of the GNU General Public License                #
+#   along with this program.  If not, see <https://www.gnu.org/licenses/>.           #
+#                                                                                    #
+# https://github.com/pterodactyl-installer/pterodactyl-installer/blob/master/LICENSE #
+#                                                                                    #
+# This script is not associated with the official Pterodactyl Project.               #
+# https://github.com/pterodactyl-installer/pterodactyl-installer                     #
+#                                                                                    #
+######################################################################################
+
 export GITHUB_SOURCE="main"
 export SCRIPT_RELEASE="v1.2.0"
 export GITHUB_BASE_URL="https://raw.githubusercontent.com/yopi-def/panel-installer"
@@ -45,14 +71,26 @@ welcome ""
 done=false
 while [ "$done" == false ]; do
   options=(
-    "Install Panel"
+    "Install the panel"
     "Install Wings"
-    "Uninstall Panel"
+    "Install both [0] and [1] on the same machine (wings script runs after panel)"
+    # "Uninstall panel or wings\n"
+
+    "Install panel with canary version of the script (the versions that lives in master, may be broken!)"
+    "Install Wings with canary version of the script (the versions that lives in master, may be broken!)"
+    "Install both [3] and [4] on the same machine (wings script runs after panel)"
+    "Uninstall panel or wings with canary version of the script (the versions that lives in master, may be broken!)"
   )
 
   actions=(
     "panel"
     "wings"
+    "panel;wings"
+    # "uninstall"
+
+    "panel_canary"
+    "wings_canary"
+    "panel_canary;wings_canary"
     "uninstall_canary"
   )
 

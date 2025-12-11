@@ -46,10 +46,10 @@ RM_WINGS="${RM_WINGS:-true}"
 rm_panel_files() {
   output "Removing panel files..."
   rm -rf /var/www/pterodactyl /usr/local/bin/composer
-  [ "$OS" != "centos" ] && [ -L /etc/nginx/sites-enabled/pterodactyl.conf ] && unlink /etc/nginx/sites-enabled/pterodactyl.conf
-  [ "$OS" != "centos" ] && [ -f /etc/nginx/sites-available/pterodactyl.conf ] && rm -f /etc/nginx/sites-available/pterodactyl.conf
-  [ "$OS" != "centos" ] && [ ! -L /etc/nginx/sites-enabled/default ] && [ -f /etc/nginx/sites-available/default ] && ln -s /etc/nginx/sites-available/default /etc/nginx/sites-enabled/default
-  [ "$OS" == "centos" ] && [ -f /etc/nginx/conf.d/pterodactyl.conf ] && rm -f /etc/nginx/conf.d/pterodactyl.conf
+  [ "$OS" != "centos" ] && unlink /etc/nginx/sites-enabled/pterodactyl.conf
+  [ "$OS" != "centos" ] && rm -f /etc/nginx/sites-available/pterodactyl.conf
+  [ "$OS" != "centos" ] && ln -s /etc/nginx/sites-available/default /etc/nginx/sites-enabled/default
+  [ "$OS" == "centos" ] && rm -f /etc/nginx/conf.d/pterodactyl.conf
   systemctl restart nginx
   success "Removed panel files."
 }
@@ -99,12 +99,7 @@ rm_cron() {
 
 rm_database() {
   output "Removing database..."
-  valid_db=$(mariadb -u root -e "SELECT schema_name FROM information_schema.schemata;" 2>/dev/null | grep -v -E -- 'schema_name|information_schema|performance_schema|mysql')
-  if [[ -z "$valid_db" ]]; then
-    warning "No valid databases found."
-    return
-  fi
-
+  valid_db=$(mariadb -u root -e "SELECT schema_name FROM information_schema.schemata;" | grep -v -E -- 'schema_name|information_schema|performance_schema|mysql')
   warning "Be careful! This database will be deleted!"
   if [[ "$valid_db" == *"panel"* ]]; then
     echo -n "* Database called panel has been detected. Is it the pterodactyl database? (y/N): "
@@ -117,35 +112,19 @@ rm_database() {
   else
     print_list "$valid_db"
   fi
-
-  while [ -z "$DATABASE" ] || [[ "$valid_db" != *"$DATABASE"* ]]; do
+  while [ -z "$DATABASE" ] || [[ $valid_db != *"$database_input"* ]]; do
     echo -n "* Choose the panel database (to skip don't input anything): "
     read -r database_input
     if [[ -n "$database_input" ]]; then
-      if [[ "$valid_db" == *"$database_input"* ]]; then
-        DATABASE="$database_input"
-      else
-        warning "Invalid database name. Try again."
-      fi
+      DATABASE="$database_input"
     else
       break
     fi
   done
-
-  if [[ -n "$DATABASE" ]]; then
-    mariadb -u root -e "DROP DATABASE $DATABASE;" 2>/dev/null || warning "Failed to drop database $DATABASE."
-  else
-    output "No database selected, skipping removal."
-  fi
-
+  [[ -n "$DATABASE" ]] && mariadb -u root -e "DROP DATABASE $DATABASE;"
   # Exclude usernames User and root (Hope no one uses username User)
   output "Removing database user..."
-  valid_users=$(mariadb -u root -e "SELECT user FROM mysql.user;" 2>/dev/null | grep -v -E -- 'user|root')
-  if [[ -z "$valid_users" ]]; then
-    warning "No valid database users found."
-    return
-  fi
-
+  valid_users=$(mariadb -u root -e "SELECT user FROM mysql.user;" | grep -v -E -- 'user|root')
   warning "Be careful! This user will be deleted!"
   if [[ "$valid_users" == *"pterodactyl"* ]]; then
     echo -n "* User called pterodactyl has been detected. Is it the pterodactyl user? (y/N): "
@@ -158,31 +137,19 @@ rm_database() {
   else
     print_list "$valid_users"
   fi
-
-  while [ -z "$DB_USER" ] || [[ "$valid_users" != *"$DB_USER"* ]]; do
+  while [ -z "$DB_USER" ] || [[ $valid_users != *"$user_input"* ]]; do
     echo -n "* Choose the panel user (to skip don't input anything): "
     read -r user_input
     if [[ -n "$user_input" ]]; then
-      if [[ "$valid_users" == *"$user_input"* ]]; then
-        DB_USER=$user_input
-      else
-        warning "Invalid username. Try again."
-      fi
+      DB_USER=$user_input
     else
       break
     fi
   done
-
-  if [[ -n "$DB_USER" ]]; then
-    mariadb -u root -e "DROP USER '$DB_USER'@'127.0.0.1';" 2>/dev/null || warning "Failed to drop user $DB_USER."
-  else
-    output "No user selected, skipping removal."
-  fi
-
-  mariadb -u root -e "FLUSH PRIVILEGES;" 2>/dev/null
-  success "Removed database and database user (if selected)."
+  [[ -n "$DB_USER" ]] && mariadb -u root -e "DROP USER $DB_USER@'127.0.0.1';"
+  mariadb -u root -e "FLUSH PRIVILEGES;"
+  success "Removed database and database user."
 }
-
 
 # --------------- Main functions --------------- #
 

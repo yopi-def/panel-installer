@@ -31,7 +31,7 @@ set -e
 # ------------------ Variables ----------------- #
 
 # Versioning
-export GITHUB_SOURCE=${GITHUB_SOURCE:-main}
+export GITHUB_SOURCE=${GITHUB_SOURCE:-master}
 export SCRIPT_RELEASE=${SCRIPT_RELEASE:-canary}
 
 # Pterodactyl versions
@@ -52,6 +52,7 @@ export SUPPORTED=false
 export PANEL_DL_URL="https://github.com/yopi-def/panel/releases/latest/download/panel.tar.gz"
 export WINGS_DL_BASE_URL="https://github.com/pterodactyl/wings/releases/latest/download/wings_linux_"
 export MARIADB_URL="https://downloads.mariadb.com/MariaDB/mariadb_repo_setup"
+export GITHUB_BASE_URL=${GITHUB_BASE_URL:-"https://raw.githubusercontent.com/pterodactyl-installer/pterodactyl-installer"}
 export GITHUB_URL="$GITHUB_BASE_URL/$GITHUB_SOURCE"
 
 # Colors
@@ -197,7 +198,7 @@ gen_passwd() {
 create_db_user() {
   local db_user_name="$1"
   local db_user_password="$2"
-  local db_host="${3:-localhost}"
+  local db_host="${3:-127.0.0.1}"
 
   output "Creating database user $db_user_name..."
 
@@ -210,7 +211,7 @@ create_db_user() {
 grant_all_privileges() {
   local db_name="$1"
   local db_user_name="$2"
-  local db_host="${3:-localhost}"
+  local db_host="${3:-127.0.0.1}"
 
   output "Granting all privileges on $db_name to $db_user_name..."
 
@@ -224,7 +225,7 @@ grant_all_privileges() {
 create_db() {
   local db_name="$1"
   local db_user_name="$2"
-  local db_host="${3:-localhost}"
+  local db_host="${3:-127.0.0.1}"
 
   output "Creating database $db_name..."
 
@@ -236,29 +237,19 @@ create_db() {
 
 # --------------- Package Manager -------------- #
 
+# Argument for quite mode
 update_repos() {
   local args=""
-  
-  [[ "$1" == true ]] && args="-qq"
-
+  [[ $1 == true ]] && args="-qq"
   case "$OS" in
-    ubuntu | debian)
-      output "Updating package repositories..."
-      if ! apt-get update -y $args; then
-        error "Failed to update repositories."
-        return 1
-      fi
-      ;;
-    centos | almalinux | rockylinux)
-      # Skip since these distros auto-refresh metadata
-      output "Skipping repository update (handled automatically on $OS)."
-      ;;
-    *)
-      warning "Unsupported OS: $OS — skipping repository update."
-      ;;
+  ubuntu | debian)
+    apt-get -y $args update
+    ;;
+  *)
+    # Do nothing as AlmaLinux and RockyLinux update metadata before installing packages.
+    ;;
   esac
 }
-
 
 # First argument list of packages to install, second argument for quite mode
 install_packages() {
@@ -537,6 +528,7 @@ esac
 
 case "$OS" in
 ubuntu)
+  [ "$OS_VER_MAJOR" == "20" ] && SUPPORTED=true
   [ "$OS_VER_MAJOR" == "22" ] && SUPPORTED=true
   [ "$OS_VER_MAJOR" == "24" ] && SUPPORTED=true
   export DEBIAN_FRONTEND=noninteractive
